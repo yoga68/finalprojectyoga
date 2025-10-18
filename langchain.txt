@@ -1,0 +1,1 @@
+Langchain Install = pip install langchain-groq google-genai langchain-google-genai google-ai-generativelanguage==0.6.15
