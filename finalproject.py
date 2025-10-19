@@ -21,30 +21,77 @@ st.title("GEBRAK DOBRAK AI")
 def load_data(data):
     return pd.read_csv(data)
 
-def get_api_key_input():
+def validate_google_api_key(api_key: str) -> tuple[bool, str]:
+    """Validate Google API key by attempting to initialize and use the model."""
+    if not api_key or len(api_key.strip()) == 0:
+        return False, "API Key tidak boleh kosong."
+    
+    try:
+        # Coba inisialisasi model dengan API key
+        llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=api_key)
+        
+        # Coba gunakan model untuk memastikan API key benar-benar valid
+        test_response = llm.invoke("Test")
+        if test_response:
+            return True, "API Key valid"
+        return False, "API Key tidak dapat digunakan untuk mengakses model."
+    except Exception as e:
+        error_msg = str(e).lower()
+        if "invalid api key" in error_msg or "unauthorized" in error_msg:
+            return False, "API Key tidak valid atau tidak memiliki akses yang diperlukan."
+        return False, f"Gagal memverifikasi API Key: {str(e)}"
 
+def get_api_key_input():
     local_logo_path = os.path.join("assets", "logo.png")
     st.image(local_logo_path, width=200)
     
     st.write("Masukkan Google API Key")
-
-    # Show logo/image above the API key input if available
     
     if "GOOGLE_API_KEY" not in st.session_state:
         st.session_state["GOOGLE_API_KEY"] = ""
+    
+    # Container untuk form dan pesan error
+    form_container = st.container()
+    
+    # Container untuk pesan error/success
+    message_container = st.container()
+    
+    with form_container:
+        col1, col2 = st.columns((80, 20))
+        with col1:
+            api_key = st.text_input("", label_visibility="collapsed", type="password")
 
-    col1, col2 = st.columns((80, 20))
-    with col1:
-        api_key = st.text_input("", label_visibility="collapsed", type="password")
-
-    with col2:
-        is_submit_pressed = st.button("Submit")
-        if is_submit_pressed:
-            st.session_state["GOOGLE_API_KEY"] = api_key
-            st.success("API Key terverifikasi.")
+        with col2:
+            is_submit_pressed = st.button("Submit")
+    
+    # Tampilkan pesan di container yang sudah ditetapkan
+    if is_submit_pressed:
+        with message_container:
+            # Create placeholder for animated transition
+            message_placeholder = st.empty()
             
-
-    os.environ["GOOGLE_API_KEY"] = st.session_state["GOOGLE_API_KEY"]
+            # Show spinner in placeholder
+            with message_placeholder:
+                with st.spinner("🔄 Memverifikasi API Key..."):
+                    # Validate the API key
+                    is_valid, message = validate_google_api_key(api_key)
+            
+            # Add slight delay for smooth transition
+            import time
+            time.sleep(0.5)
+            
+            # Replace spinner with result message
+            with message_placeholder:
+                if is_valid:
+                    st.session_state["GOOGLE_API_KEY"] = api_key
+                    os.environ["GOOGLE_API_KEY"] = api_key
+                    st.success("✅ API Key berhasil diverifikasi.")
+                else:
+                    st.error(f"❌ {message}")
+                    st.session_state["GOOGLE_API_KEY"] = ""
+                    os.environ["GOOGLE_API_KEY"] = ""
+                    st.stop()
+                    return
 
 # API Key input hanya tampil jika belum diverifikasi
 if not st.session_state.get("GOOGLE_API_KEY"):
