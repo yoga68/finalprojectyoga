@@ -1,20 +1,12 @@
 import os
 
 import streamlit as st
-import fitz
+
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 
+
 st.title("DAMRI AI")
-
-
-def extract_text_from_pdf(pdf_path):
-    """Mengekstrak teks dari PDF"""
-    doc = fitz.open(pdf_path)
-    text = "\n".join([page.get_text() for page in doc])
-    return text
-
-pdf_text = extract_text_from_pdf("dokumen/FINAL - SRS Risk Register perum DAMRI.pdf")
 
 def get_api_key_input():
     st.write("Masukkan Google API Key")
