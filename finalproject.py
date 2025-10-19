@@ -103,7 +103,7 @@ else:
 # Setelah API key diverifikasi, baru tampilkan upload dokumen dan tombol clear
 with st.form("upload_form"):
     uploaded_files = st.file_uploader("Upload PDF File(s)", type=["pdf"], accept_multiple_files=True)
-    submitted = st.form_submit_button("Submit")
+    submitted = st.form_submit_button("Process Knowledge")
 
 # Tombol clear untuk menghapus batasan RAG dan temporary files
 if st.button("Clear PDF Context"):
